@@ -106,7 +106,7 @@ def run() -> None:
         logger.debug(ts)
         if all(
             map(lambda et: isinstance(et, ET.Element), (lbd, link, desc))
-        ) and (link.text in ts or lbd.text in ts):
+        ) and (link.text not in ts and lbd.text not in ts):
             ts.add(link.text)
             ts.add(lbd.text)
             db["timestamp"] = ts
