@@ -36,10 +36,20 @@ license  : GPL-3.0+
 Nasy Telegram User Bots.
 
 """
-# Others
-from bots import bots
-from aiocron import crontab
+# Standard Library
 import asyncio
+import sys
+
+# Others
+from aiocron import crontab
+from bots import bots
+from loguru import logger
+
+logger.add(
+    sys.stdout,
+    colorize=True,
+    format="<green>{time}</green> <level>{message}</level>",
+)
 
 
 @crontab("*/1 * * * *")
@@ -47,6 +57,7 @@ async def run_async() -> None:
     """Run all async bots."""
     for bot in bots.a_bots:
         bot.run()
+
 
 if __name__ == "__main__":
     asyncio.get_event_loop().run_forever()
