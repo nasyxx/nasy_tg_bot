@@ -51,6 +51,8 @@ from loguru import logger
 
 # Config
 from config import rss, user
+
+# Types
 from typ import Bot
 
 TO = "-1001385481497"
@@ -121,5 +123,6 @@ def run() -> None:
         db["timestamp"] = ts
         db.sync()
         logger.info("Arknight RSS\tend.")
+
 
 ark_bot = Bot(run)

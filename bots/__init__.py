@@ -35,7 +35,9 @@ license  : GPL-3.0+
 
 Nasy Telegram bots
 """
+# Types
 from typ import Bots
+
 # Local
 from .arknight_rss import ark_bot
 
