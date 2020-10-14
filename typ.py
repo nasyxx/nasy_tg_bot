@@ -36,10 +36,10 @@ license  : GPL-3.0+
 Nasy Telegram bots typing.
 """
 # Types
-from typing import Callable, NamedTuple
+from typing import Callable, NamedTuple, Tuple
 
 User = NamedTuple("User", [("id", str), ("hash", str)])
 RSSH = NamedTuple("RSSH", [("host", str), ("w_ark", str)])
 
 Bot = NamedTuple("ABot", [("run", Callable[[None], None])])
-Bots = NamedTuple("Bots", [("a_bots", tuple[Bot]), ("bots", tuple[Bot])])
+Bots = NamedTuple("Bots", [("a_bots", Tuple[Bot]), ("bots", Tuple[Bot])])
