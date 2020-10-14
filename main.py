@@ -45,6 +45,7 @@ from aiocron import crontab
 from bots import bots
 from loguru import logger
 
+logger.remove()
 logger.add(
     sys.stdout,
     colorize=True,
