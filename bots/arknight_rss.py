@@ -112,8 +112,8 @@ def run() -> None:
             db["timestamp"] = ts
             db.sync()
             try:
+                logger.info("run _send")
                 # _send("\n".join((f"{link}", desc.text.replace("<br>", "\n"))))
-                1
             except BaseException as e:
                 logger.error(e)
                 logger.error(f"Arknight RSS\tsend error\t{(link,lbd,desc)}")
