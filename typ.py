@@ -41,5 +41,5 @@ from typing import Callable, NamedTuple, Tuple
 User = NamedTuple("User", [("id", str), ("hash", str)])
 RSSH = NamedTuple("RSSH", [("host", str), ("w_ark", str)])
 
-Bot = NamedTuple("ABot", [("run", Callable[[None], None])])
-Bots = NamedTuple("Bots", [("a_bots", Tuple[Bot]), ("bots", Tuple[Bot])])
+Bot = NamedTuple("ABot", [("run", Callable[[], None])])
+Bots = NamedTuple("Bots", [("a_bots", Tuple[Bot, ...]), ("bots", Tuple[Bot, ...])])

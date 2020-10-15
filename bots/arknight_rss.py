@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 r"""
-心之憂矣於我歸處 Python ♡ Nasy
+心之憂矣於我歸處 Python ♡ Nasy.
 
     |             *         *
     |                  .                .
@@ -37,7 +37,6 @@ Arknigth weibo to Telegram bot.
 """
 # Standard Library
 import re
-import xml.etree.ElementTree as ET
 
 # DataBase
 import shelve
@@ -46,6 +45,7 @@ import shelve
 from pyrogram import Client
 
 # Others
+from defusedxml.ElementTree import fromstring
 from httpx import get
 from loguru import logger
 
@@ -74,15 +74,15 @@ def _send(text: str) -> None:
         )
         _logs("text", text)
         for vurl in V_RE.findall(text):
+            _logs("video", vurl)
             try:
-                _logs("video", vurl)
                 bot.send_video(TO, vurl, disable_natification=True)
-            except BaseException:
+            except BaseException as e:
                 logger.error(e)
                 logger.error(f"Arknight RSS\t{vurl}")
         for purl in P_RE.findall(text):
+            _logs("picture", purl)
             try:
-                _logs("picture", purl)
                 bot.send_message(TO, purl, disable_notification=True)
             except BaseException as e:
                 logger.error(e)
@@ -92,7 +92,7 @@ def _send(text: str) -> None:
 def run() -> None:
     """Run arknight rss bot."""
     logger.info("Arknight RSS\trun:")
-    etree = ET.fromstring(get(rss.host + rss.w_ark).text)
+    etree = fromstring(get(rss.host + rss.w_ark).text)
 
     lbd = etree.find(".//item/pubDate")
     link = etree.find(".//item/link")
@@ -105,7 +105,7 @@ def run() -> None:
         ts = db.get("timestamp", {"timestamp"})
         logger.debug(ts)
         if all(
-            map(lambda et: isinstance(et, ET.Element), (lbd, link, desc))
+            map(lambda et: et is not None, (lbd, link, desc))
         ) and (link.text not in ts and lbd.text not in ts):
             ts.add(link.text)
             ts.add(lbd.text)
