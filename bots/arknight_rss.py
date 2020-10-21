@@ -37,6 +37,7 @@ Arknigth weibo to Telegram bot.
 """
 # Standard Library
 import re
+from asyncio import gather
 
 # DataBase
 import shelve
@@ -50,14 +51,17 @@ from httpx import get
 from loguru import logger
 
 # Config
-from config import rss, user
+from config import TLG, rss, user
 
 # Types
 from typ import Bot
 
-TO = "-1001385481497"
+TO = -1001385481497
 V_RE = re.compile(r'<video.*?src="(.*?)"')
 P_RE = re.compile(r'<img.*?src="(.*?)"')
+TS = "timestamp"
+
+_BOT = Client("ArknightRSS", api_id=user.id, api_hash=user.hash)
 
 
 def _logs(typ: str, text: str) -> None:
@@ -66,30 +70,37 @@ def _logs(typ: str, text: str) -> None:
     logger.info(f"Arknight RSS\t{text}")
 
 
-def _send(text: str) -> None:
+async def _send(text: str, to: int = TO) -> None:
     """Send text to `TO`."""
-    with Client("ArknightRSS", api_id=user.id, api_hash=user.hash) as bot:
-        bot.send_message(
-            TO, text, parse_mode="html", disable_notification=True
+    async with _BOT as bot:
+        await bot.send_message(
+            to,
+            text,
+            parse_mode="html",
+            disable_web_page_preview=True,
+            disable_notification=True,
         )
         _logs("text", text)
         for vurl in V_RE.findall(text):
             _logs("video", vurl)
             try:
-                bot.send_video(TO, vurl, disable_natification=True)
+                await gather(
+                    bot.send_video(to, vurl, disable_notification=True),
+                    bot.send_message(to, vurl, disable_notification=True),
+                )
             except BaseException as e:
                 logger.error(e)
                 logger.error(f"Arknight RSS\t{vurl}")
         for purl in P_RE.findall(text):
             _logs("picture", purl)
             try:
-                bot.send_message(TO, purl, disable_notification=True)
+                await bot.send_message(to, purl, disable_notification=True)
             except BaseException as e:
                 logger.error(e)
                 logger.error(f"Arknight RSS\t{purl}")
 
 
-def run() -> None:
+async def run() -> None:
     """Run arknight rss bot."""
     logger.info("Arknight RSS\trun:")
     etree = fromstring(get(rss.host + rss.w_ark).text)
@@ -98,29 +109,40 @@ def run() -> None:
     link = etree.find(".//item/link")
     desc = etree.find(".//item/description")
 
-    logger.debug(lbd.text)
-    logger.debug(link.text)
-    logger.debug(desc.text)
     with shelve.open("arkrss", writeback=True) as db:
-        ts = db.get("timestamp", {"timestamp"})
-        logger.debug(ts)
-        if all(
-            map(lambda et: et is not None, (lbd, link, desc))
-        ) and (link.text not in ts and lbd.text not in ts):
+        ts = db.get(TS, {TS})
+        if all(map(lambda et: et is not None, (lbd, link, desc))) and (
+            link.text not in ts and lbd.text not in ts
+        ):
             ts.add(link.text)
             ts.add(lbd.text)
-            db["timestamp"] = ts
+            db[TS] = ts
             db.sync()
+            logger.info("run _send")
             try:
-                logger.info("run _send")
-                # _send("\n".join((f"{link}", desc.text.replace("<br>", "\n"))))
+                await _send(
+                    "\n".join((f"{link}", desc.text.replace("<br>", "\n"))),
+                    TO,
+                )
             except BaseException as e:
                 logger.error(e)
-                logger.error(f"Arknight RSS\tsend error\t{(link,lbd,desc)}")
+                logger.error(
+                    f"Arknight RSS\tsend error\t{(TO, link, lbd, desc)}"
+                )
+            try:
+                await _send(
+                    "\n".join((f"{link}", desc.text.replace("<br>", "\n"))),
+                    TLG,
+                )
+            except BaseException as e:
+                logger.error(e)
+                logger.error(
+                    f"Arknight RSS\tsend error\t{(TLG, link, lbd, desc)}"
+                )
 
         ts.add(link.text)
         ts.add(lbd.text)
-        db["timestamp"] = ts
+        db[TS] = ts
         db.sync()
         logger.info("Arknight RSS\tend.")
 

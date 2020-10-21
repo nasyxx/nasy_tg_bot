@@ -58,7 +58,7 @@ logger.add(
 async def run_async() -> None:
     """Run all async bots."""
     for bot in bots.a_bots:
-        bot.run()
+        await bot.run()
 
 
 if __name__ == "__main__":
