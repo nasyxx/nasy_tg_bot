@@ -1,1 +1,3 @@
-{"reportUndefinedVariable": "error"}
+{"exclude": ["__pycache__", "__pypackages__"],
+    "reportUndefinedVariable": "error"
+}
