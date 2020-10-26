@@ -84,11 +84,9 @@ async def _send(text: str, to: int = TO) -> None:
         for vurl in V_RE.findall(text):
             _logs("video", vurl)
             try:
-                await gather(
-                    bot.send_video(to, vurl, disable_notification=True),
-                    bot.send_message(to, vurl, disable_notification=True),
-                )
+                await bot.send_video(to, vurl, disable_notification=True)
             except BaseException as e:
+                await bot.send_message(to, vurl, disable_notification=True)
                 logger.error(e)
                 logger.error(f"Arknight RSS\t{vurl}")
         for purl in P_RE.findall(text):
