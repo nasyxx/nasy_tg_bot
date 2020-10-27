@@ -119,7 +119,9 @@ async def run() -> None:
             logger.info("run _send")
             try:
                 await _send(
-                    "\n".join((f"{link}", desc.text.replace("<br>", "\n"))),
+                    "\n".join(
+                        (f"#微博: {link.text}", desc.text.replace("<br>", "\n"))
+                    ),
                     TO,
                 )
             except BaseException as e:
@@ -129,7 +131,9 @@ async def run() -> None:
                 )
             try:
                 await _send(
-                    "\n".join((f"{link}", desc.text.replace("<br>", "\n"))),
+                    "\n".join(
+                        (f"#微博: {link.text}", desc.text.replace("<br>", "\n"))
+                    ),
                     TLG,
                 )
             except BaseException as e:
