@@ -39,9 +39,9 @@ Nasy Telegram bots typing.
 from typing import Callable, Coroutine, NamedTuple, Tuple
 
 User = NamedTuple("User", [("id", str), ("hash", str)])
-RSSH = NamedTuple("RSSH", [("host", str), ("w_ark", str)])
+RSSH = NamedTuple("RSSH", [("host", str), ("id_", str)])
 
-Bot = NamedTuple("ABot", [("run", Callable[[], Coroutine[None, None, None]])])
+Bot = NamedTuple("Bot", [("run", Callable[[], Coroutine[None, None, None]])])
 Bots = NamedTuple(
     "Bots", [("a_bots", Tuple[Bot, ...]), ("bots", Tuple[Bot, ...])]
 )

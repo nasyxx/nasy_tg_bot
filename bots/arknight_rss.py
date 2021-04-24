@@ -37,7 +37,7 @@ Arknigth weibo to Telegram bot.
 """
 # Standard Library
 import re
-from asyncio import gather
+import time
 
 # DataBase
 import shelve
@@ -45,20 +45,22 @@ import shelve
 # Telegram
 from pyrogram import Client
 
+# Http
+from httpx import get
+
 # Others
 from defusedxml.ElementTree import fromstring
-from httpx import get
 from loguru import logger
 
 # Config
-from config import TLG, rss, user
+from config import TLG, rsses, user
 
 # Types
 from typ import Bot
 
 TO = -1001385481497
-V_RE = re.compile(r'<video.*?src="(.*?)"')
-P_RE = re.compile(r'<img.*?src="(.*?)"')
+V_RE = re.compile('<video.*?src="(.*?)"')
+P_RE = re.compile('<img.*?src="(.*?)"')
 TS = "timestamp"
 
 _BOT = Client("ArknightRSS", api_id=user.id, api_hash=user.hash)
@@ -100,53 +102,64 @@ async def _send(text: str, to: int = TO) -> None:
 
 async def run() -> None:
     """Run arknight rss bot."""
+    time.sleep(10)
     logger.info("Arknight RSS\trun:")
-    etree = fromstring(get(rss.host + rss.w_ark).text)
+    for rss in rsses:
+        etree = fromstring(get(rss.host + rss.id_, timeout=50).text)
+        items = etree.findall(".//item")
+        for item in items:
 
-    lbd = etree.find(".//item/pubDate")
-    link = etree.find(".//item/link")
-    desc = etree.find(".//item/description")
+            lbd = item.find("./pubDate")
+            link = item.find("./link")
+            desc = item.find("./description")
 
-    with shelve.open("arkrss", writeback=True) as db:
-        ts = db.get(TS, {TS})
-        if all(map(lambda et: et is not None, (lbd, link, desc))) and (
-            link.text not in ts and lbd.text not in ts
-        ):
-            ts.add(link.text)
-            ts.add(lbd.text)
-            db[TS] = ts
-            db.sync()
-            logger.info("run _send")
-            try:
-                await _send(
-                    "\n".join(
-                        (f"#微博: {link.text}", desc.text.replace("<br>", "\n"))
-                    ),
-                    TO,
-                )
-            except BaseException as e:
-                logger.error(e)
-                logger.error(
-                    f"Arknight RSS\tsend error\t{(TO, link, lbd, desc)}"
-                )
-            try:
-                await _send(
-                    "\n".join(
-                        (f"#微博: {link.text}", desc.text.replace("<br>", "\n"))
-                    ),
-                    TLG,
-                )
-            except BaseException as e:
-                logger.error(e)
-                logger.error(
-                    f"Arknight RSS\tsend error\t{(TLG, link, lbd, desc)}"
-                )
+            with shelve.open("arkrss", writeback=True) as db:
+                ts = db.get(TS, {TS})
+                if all(map(lambda et: et is not None, (lbd, link, desc))) and (
+                    link.text not in ts and lbd.text not in ts
+                ):
+                    ts.add(link.text)
+                    ts.add(lbd.text)
+                    db[TS] = ts
+                    db.sync()
+                    logger.info("run _send")
+                    try:
+                        await _send(
+                            "\n".join(
+                                (
+                                    f"#微博: {link.text}",
+                                    desc.text.replace("<br>", "\n"),
+                                )
+                            ),
+                            TO,
+                        )
+                    except BaseException as e:
+                        logger.error(e)
+                        logger.error(
+                            f"Arknight RSS\tsend error\t{(TO, link, lbd, desc)}"
+                        )
+                    try:
+                        await _send(
+                            "\n".join(
+                                (
+                                    f"#微博: {link.text}",
+                                    desc.text.replace("<br>", "\n"),
+                                )
+                            ),
+                            TLG,
+                        )
+                    except BaseException as e:
+                        logger.error(e)
+                        logger.error(
+                            f"Arknight RSS\tsend error\t{(TLG, link, lbd, desc)}"
+                        )
 
-        ts.add(link.text)
-        ts.add(lbd.text)
-        db[TS] = ts
-        db.sync()
-        logger.info("Arknight RSS\tend.")
+                    ts.add(link.text)
+                    ts.add(lbd.text)
+                    db[TS] = ts
+                    db.sync()
+
+    logger.info("Arknight RSS\tend.")
 
 
 ark_bot = Bot(run)
